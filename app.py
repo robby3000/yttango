@@ -2,8 +2,10 @@ from flask import Flask, request, jsonify, render_template
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 from urllib.parse import urlparse, parse_qs
 import re
+import logging
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 def extract_video_id(youtube_url):
     """Extract the video ID from a YouTube URL"""
@@ -62,10 +64,13 @@ def get_transcript():
         return jsonify({'transcript': full_transcript})
     
     except TranscriptsDisabled:
+        logging.error('Transcripts are disabled for this video', exc_info=True)
         return jsonify({'error': 'Transcripts are disabled for this video'}), 404
     except NoTranscriptFound:
+        logging.error('No transcript found for this video', exc_info=True)
         return jsonify({'error': 'No transcript found for this video'}), 404
     except Exception as e:
+        logging.error(f'Error fetching transcript: {str(e)}', exc_info=True)
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
 
 if __name__ == '__main__':
